@@ -431,7 +431,7 @@ void MapBuilder::ProcessMap() {
 //  DLOG(INFO) << "center_after: " << center_cube_i << " " << center_cube_j << " " << center_cube_k;
 //  DLOG(INFO) << "laser_cloud_cen: " << laser_cloud_cen_length_ << " " << laser_cloud_cen_width_ << " "
 //            << laser_cloud_cen_height_;
-//判断cube的可视性
+//判断cube的可视性，在前后左右上下2个cube范围内，即5*5*5的cube方阵范围内
   for (int i = center_cube_i - 2; i <= center_cube_i + 2; ++i) {
     for (int j = center_cube_j - 2; j <= center_cube_j + 2; ++j) {
       for (int k = center_cube_k - 2; k <= center_cube_k + 2; ++k) {
@@ -481,15 +481,16 @@ void MapBuilder::ProcessMap() {
 //          DLOG(INFO) << "FromIndex, i, j, k " << cube_idx << " " << tmpi << " " << tmpj << " " << tmpk;
 
           if (is_in_laser_fov) {
-            laser_cloud_valid_idx_.push_back(cube_idx);
+            laser_cloud_valid_idx_.push_back(cube_idx);  //可视范围内的地图cube序号
           }
-          laser_cloud_surround_idx_.push_back(cube_idx);
+          laser_cloud_surround_idx_.push_back(cube_idx);  //周围5×5×5cube方阵范围内的所有cube的idx
         }
       }
     }
   }
 
   // prepare valid map corner and surface cloud for pose optimization
+  // 为位姿优化准备有效的地图特征点云
   laser_cloud_corner_from_map_->clear();
   laser_cloud_surf_from_map_->clear();
   size_t laser_cloud_valid_size = laser_cloud_valid_idx_.size();
@@ -499,6 +500,7 @@ void MapBuilder::ProcessMap() {
   }
 
   // prepare feature stack clouds for pose optimization
+  // 为位姿优化准备当前帧的特征点云
   size_t laser_cloud_corner_stack_size2 = laser_cloud_corner_stack_->points.size();
   for (int i = 0; i < laser_cloud_corner_stack_size2; ++i) {
     PointAssociateTobeMapped(laser_cloud_corner_stack_->points[i],
@@ -514,6 +516,7 @@ void MapBuilder::ProcessMap() {
   }
 
   // down sample feature stack clouds
+  // 降采样特征点云
   laser_cloud_corner_stack_downsampled_->clear();
   down_size_filter_corner_.setInputCloud(laser_cloud_corner_stack_);
   down_size_filter_corner_.filter(*laser_cloud_corner_stack_downsampled_);
@@ -532,7 +535,7 @@ void MapBuilder::ProcessMap() {
   // NOTE: run pose optimization
   if (odom_count_ % skip_count_ == 0) {
     if (enable_4d_) {
-      OptimizeMap();
+      OptimizeMap();  //进行4D位姿优化
     } else {
       OptimizeTransformTobeMapped();
       DLOG(INFO) << "DISABLE 4D";
@@ -548,7 +551,7 @@ void MapBuilder::ProcessMap() {
   ++odom_count_;
 
   // store down sized corner stack points in corresponding cube clouds
-
+  // 将当前帧的特征点云存储到对应的cube中
   CubeCenter cube_center;
   cube_center.laser_cloud_cen_length = laser_cloud_cen_length_;
   cube_center.laser_cloud_cen_width = laser_cloud_cen_width_;
