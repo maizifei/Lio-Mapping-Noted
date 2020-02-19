@@ -1,0 +1,88 @@
+%YAML:1.0
+# lidar features
+min_plane_dis: 0.2
+
+min_match_sq_dis: 1.0
+
+corner_filter_size: 0.2
+surf_filter_size: 0.4
+map_filter_size: 0.6
+
+# window sizes
+window_size: 9 #7 滑动窗口大小
+opt_window_size: 5 #5
+
+init_window_factor: 2
+
+# Extrinsic parameter between IMU and Camera (adapted from VINS-mono)
+estimate_extrinsic: 1   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
+                        # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
+                        # 2  Don't know anything about extrinsic parameters. You don't need to give R,T. We will try to calibrate it. Do some rotation movement at beginning.
+opt_extrinsic: 1
+
+#  VLP-16  ADIS16465
+extrinsic_rotation: !!opencv-matrix
+  rows: 3
+  cols: 3
+  dt: d
+  # data: [-0.999803,  0.00532456,  -0.0191098,
+  #        -0.00529454,  -0.999985,  -0.00162116,
+  #        -0.0191181,  -0.00151966,  0.999816]
+  # data: [-0.999975,  0.00144135,  -0.00684277,
+  #        -0.00158208,  -0.999786,  0.0206054,
+  #        -0.00681161,  0.0206157,  0.999764]
+  #优化后的数据
+  data: [-0.99973,  -0.0140191,  -0.0185349,
+         0.0139177,  -0.999888,  0.00558535,
+         -0.0186111,  0.00532588,  0.999813]  
+
+#Translation from imu frame to laser frame, laser^T_imu
+extrinsic_translation: !!opencv-matrix
+  rows: 3
+  cols: 1
+  dt: d
+  # data: [0.012, 0.011, 0.044]
+  data: [-0.041485529393, 0.0369171276689, -0.124027170241]
+
+
+# optimization options
+run_optimization: 1
+
+update_laser_imu: 1  #debug only
+gravity_fix: 1  #debug only
+
+plane_projection_factor: 0
+
+imu_factor: 1
+point_distance_factor: 1
+
+prior_factor: 0
+
+marginalization_factor: 1
+
+odom_io: 2
+
+pcl_viewer: 0
+
+# IMU noises
+acc_n: 0.2
+gyr_n: 0.02
+acc_w: 0.0002
+gyr_w: 2.0e-5
+# acc_n: 0.2
+# gyr_n: 0.02
+# acc_w: 0.0005
+# gyr_w: 2.0e-4
+# acc_n: 1.9862287242243099e-03
+# gyr_n: 1.8582082627718251e-04
+# acc_w: 1.2148497781522122e-03
+# gyr_w: 7.2451532648461174e-05
+g_norm: 9.805
+
+# lidar deskew
+enable_deskew: 1
+cutoff_deskew: 0
+
+keep_features: 1  #keep the previously calculated features or not, typically set it to 0
+
+msg_time_delay: 0.05 #used to buffer more IMU data to the middle timestamp of the lidar
