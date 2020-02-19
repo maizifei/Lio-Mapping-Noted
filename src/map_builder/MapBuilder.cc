@@ -317,7 +317,7 @@ void MapBuilder::ProcessMap() {
   if (transform_tobe_mapped_.pos.z() + 25.0 < 0) --center_cube_k;
 
 //  DLOG(INFO) << "center_before: " << center_cube_i << " " << center_cube_j << " " << center_cube_k;
-//根据transform_tobe_mapped_在cube地图中的位置滑动cube，此处可参照LOAM_NOTED的注释
+//根据transform_tobe_mapped_(由里程计增量估计的当前位姿)在cube地图中的位置滑动cube，此处可参照LOAM_NOTED的注释
   {
     while (center_cube_i < 3) {
       for (int j = 0; j < laser_cloud_width_; ++j) {
