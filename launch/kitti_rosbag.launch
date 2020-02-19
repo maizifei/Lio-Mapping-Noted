@@ -1,0 +1,10 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+
+  <node pkg="rosbag" type="play" name="kitti_raw" output="screen" args="--clock /Dataset/test.bag"> 
+    <remap from="velodyne_points" to="/velodyne_points" />
+    <remap from="imu" to="/imu/data" />
+  </node>  
+
+</launch>
