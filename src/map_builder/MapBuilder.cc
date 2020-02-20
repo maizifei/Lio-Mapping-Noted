@@ -245,8 +245,9 @@ void MapBuilder::ProcessMap() {
 
   // relate incoming data to map
   // WARNING
+  //根据上一次优化的位姿及estimator里程计的位姿增量，得到当前帧位姿初步估计transform_tobe_mapped_
   if (enable_4d_) {
-    Transform4DAssociateToMap();  //根据上一次优化的位姿及estimator里程计的位姿增量，得到transform_tobe_mapped_
+    Transform4DAssociateToMap();
   } else {
     TransformAssociateToMap();
     DLOG(INFO) << "DISABLE 4D";
