@@ -536,7 +536,7 @@ void MapBuilder::ProcessMap() {
   // NOTE: run pose optimization
   if (odom_count_ % skip_count_ == 0) {
     if (enable_4d_) {
-      OptimizeMap();  //进行4D位姿优化
+      OptimizeMap();  //进行4D位姿优化，即只对yaw,pos.x,pos.y,pos.z进行优化
     } else {
       OptimizeTransformTobeMapped();
       DLOG(INFO) << "DISABLE 4D";
