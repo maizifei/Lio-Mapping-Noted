@@ -679,12 +679,14 @@ void MapBuilder::OptimizeMap() {
   constrained_axis.normalize();
   Eigen::Matrix3f constrained_R =
       Eigen::Quaternionf::FromTwoVectors(Eigen::Vector3f{1.0, 0.0, 0.0}, constrained_axis).toRotationMatrix();
+  // info_mat没有用？？
   Eigen::Matrix3f info_mat;
   info_mat.setZero();
   info_mat(0, 0) = 1;
   info_mat(1, 1) = 1;
   info_mat(2, 2) = 1;
   info_mat = (constrained_R.transpose() * info_mat * constrained_R).eval();
+  // projection_mat没有用？？
   Eigen::Matrix3f projection_mat =
       constrained_axis * (constrained_axis.transpose() * constrained_axis).inverse() * constrained_axis.transpose();
   
