@@ -1017,7 +1017,7 @@ void MapBuilder::OptimizeMap() {
     }
   }
 
-  Transform4DUpdate();
+  Transform4DUpdate();  //更新优化的位姿结果
 }
 
 }
