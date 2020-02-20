@@ -53,7 +53,7 @@ ConstrainedRotAxis(const Eigen::QuaternionBase<Derived> &quat_in) {
 }
 
 void MapBuilder::Transform4DAssociateToMap() {
-  //transform_incre为两次estimator里程计之间的位姿变化，transform_bef_mapped_为上一次的transform_sum_，transform_sum_为从estimator节点接收到的当前里程计位姿
+  //transform_incre为两次estimator里程计之间的位姿增量，transform_bef_mapped_为上一次的transform_sum_，transform_sum_为从estimator节点接收到的当前里程计位姿
   Transform transform_incre(transform_bef_mapped_.inverse() * transform_sum_.transform());
   //上一次建图优化的结果“+”本次和上次estimator里程计之间的位姿变化  
   Transform full_transform = transform_tobe_mapped_ * transform_incre;
@@ -687,13 +687,15 @@ void MapBuilder::OptimizeMap() {
   info_mat = (constrained_R.transpose() * info_mat * constrained_R).eval();
   Eigen::Matrix3f projection_mat =
       constrained_axis * (constrained_axis.transpose() * constrained_axis).inverse() * constrained_axis.transpose();
-
+  
+  // 优化迭代
   for (size_t iter_count = 0; iter_count < num_max_iterations_; ++iter_count) {
     laser_cloud_ori.clear();
     coeff_sel.clear();
 
     laser_cloud_ori_spc.clear();
 
+    // 角点匹配，得到匹配的平面法向量和距离残差coeff_sel
     for (int i = 0; i < laser_cloud_corner_stack_size; ++i) {
       point_ori = laser_cloud_corner_stack_downsampled_->points[i];
       PointAssociateToMap(point_ori, point_sel, transform_tobe_mapped_);
@@ -802,7 +804,8 @@ void MapBuilder::OptimizeMap() {
         }
       }
     }
-
+    
+    // 平面点匹配，得到匹配的平面法向量和距离残差coeff_sel
     for (int i = 0; i < laser_cloud_surf_stack_size; i++) {
       point_ori = laser_cloud_surf_stack_downsampled_->points[i];
       PointAssociateToMap(point_ori, point_sel, transform_tobe_mapped_);
@@ -878,7 +881,7 @@ void MapBuilder::OptimizeMap() {
     }
 
     size_t laser_cloud_sel_size = laser_cloud_ori.points.size();
-    if (laser_cloud_sel_size < 50) {
+    if (laser_cloud_sel_size < 50) {  // 若匹配的点数小于50个，跳过此次优化迭代
       continue;
     }
 
@@ -922,7 +925,8 @@ void MapBuilder::OptimizeMap() {
       mat_A(i, 5) = J_t.z();
       mat_B(i, 0) = -d2;
     }
-
+   
+    // 求解优化方程
     mat_At = mat_A.transpose();
     matAtA = mat_At * mat_A;
     mat_AtB = mat_At * mat_B;
@@ -969,6 +973,7 @@ void MapBuilder::OptimizeMap() {
 
     Eigen::Vector3f r_so3 = R_SO3.log();
 
+    // 累加优化增量
     r_so3.x() += mat_X(0, 0);
     r_so3.y() += mat_X(1, 0);
     r_so3.z() += mat_X(2, 0);
