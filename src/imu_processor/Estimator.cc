@@ -1811,9 +1811,10 @@ void Estimator::SolveOptimization() {
   }
   //endregion
 
+  //添加IMU预积分残差项
   vector<ceres::internal::ResidualBlock *> res_ids_pim;
 
-  if (estimator_config_.imu_factor) {  //IMU预积分残差项
+  if (estimator_config_.imu_factor) {  
 
     for (int i = 0; i < estimator_config_.opt_window_size;
          ++i) {
@@ -1849,10 +1850,10 @@ void Estimator::SolveOptimization() {
       res_ids_pim.push_back(res_id);
     }
   }
-
+  //添加Lidar相对测量残差项
   vector<ceres::internal::ResidualBlock *> res_ids_proj;
 
-  if (estimator_config_.point_distance_factor) {  //相对测量残差项
+  if (estimator_config_.point_distance_factor) {  
     for (int i = 0; i < estimator_config_.opt_window_size + 1; ++i) {
       int opt_i = int(estimator_config_.window_size - estimator_config_.opt_window_size + i);
 
@@ -1911,8 +1912,9 @@ void Estimator::SolveOptimization() {
       }
     }
   }
-
-  if (estimator_config_.prior_factor) {  //系统外参
+  
+  //添加系统外参残差项，这点与VINS不同，VINS中没有此项约束
+  if (estimator_config_.prior_factor) {  
     {
       Twist<double> trans_tmp = transform_lb_.cast<double>();
       PriorFactor *f = new PriorFactor(trans_tmp.pos, trans_tmp.rot);  //外参残差和Jacobian计算
