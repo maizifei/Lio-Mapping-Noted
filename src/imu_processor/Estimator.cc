@@ -1762,8 +1762,8 @@ void Estimator::SolveOptimization() {
   }
 
   vector<FeaturePerFrame> feature_frames;
-
-  BuildLocalMap(feature_frames);  //建立局部地图，计算优化窗口内所有帧的scan to map特征匹配
+  //建立局部地图，计算优化窗口内所有帧的scan to map特征匹配，匹配结果feature_frames用于下面整体优化中添加Lidar约束项
+  BuildLocalMap(feature_frames);  
 
   vector<double *> para_ids;
 
