@@ -288,8 +288,8 @@ void Estimator::ClearState() {
 }
 
 void Estimator::SetupRos(ros::NodeHandle &nh) {
-  MeasurementManager::SetupRos(nh);
-  PointMapping::SetupRos(nh, false);
+  MeasurementManager::SetupRos(nh);  //订阅IMU消息和compact_data（即PointOdometry的特征点云）消息
+  PointMapping::SetupRos(nh, false);  //似乎多余
 
   wi_trans_.frame_id_ = "/camera_init";
   wi_trans_.child_frame_id_ = "/world";
@@ -569,7 +569,7 @@ void Estimator::ProcessLaserOdom(const Transform &transform_in, const std_msgs::
               std_srvs::SetBool srv;
               srv.request.data = 0;
               if (client.call(srv)) {
-                DLOG(INFO) << "TURN OFF THE ORIGINAL LASER ODOM";
+                DLOG(INFO) << "TURN OFF THE ORIGINAL LASER ODOM";  // 关闭原始的激光里程计计算，即PointOdometry
               } else {
                 LOG(FATAL) << "FAILED TO CALL TURNING OFF THE ORIGINAL LASER ODOM";
               }
