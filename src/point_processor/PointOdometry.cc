@@ -722,6 +722,7 @@ void PointOdometry::PublishResults() {
 
 
   // publish cloud results according to the input output ratio
+  // 每io_ratio_帧点云，发布一帧处理后的点云数据，若io_ratio_=2,则每两帧发布一帧点云数据
   if (io_ratio_ < 2 || frame_count_ % io_ratio_ == 1) {
 
     ros::Time sweepTime = time_corner_points_sharp_;

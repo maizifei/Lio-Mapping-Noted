@@ -60,7 +60,7 @@ prior_factor: 0  #estimator的联合优化中是否加入外参项
 
 marginalization_factor: 1
 
-odom_io: 2
+odom_io: 2  #用于控制PointOdometry发布点云消息时的输入输出比例
 
 pcl_viewer: 0
 
