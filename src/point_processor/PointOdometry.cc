@@ -108,7 +108,7 @@ void PointOdometry::SetupRos(ros::NodeHandle &nh) {
   nh.param("compact_data", compact_data_, true);
   nh.param("no_deskew", no_deskew_, false);
 
-  enable_odom_service_ = nh.advertiseService("/enable_odom", &PointOdometry::EnableOdom, this);
+  enable_odom_service_ = nh.advertiseService("/enable_odom", &PointOdometry::EnableOdom, this);  //打开或关闭纯激光里程计的消息
 
   if (compact_data_) {
     pub_compact_data_ = nh.advertise<sensor_msgs::PointCloud2>("/compact_data", 2);
@@ -318,7 +318,7 @@ void PointOdometry::Process() {
   size_t last_surf_size = last_surf_cloud_->points.size();
 
   tic_toc_.Tic();
-
+  // 打开纯激光里程计的计算时，才运行里程计计算
   if (enable_odom_) {
     // NOTE: fixed number here
     if (last_corner_size > 10 && last_surf_size > 100) {
@@ -678,7 +678,7 @@ void PointOdometry::Process() {
   ROS_DEBUG_STREAM("odom: " << tic_toc_.Toc() << " ms");
   /// process ends
 
-  PublishResults();
+  PublishResults();  //发布点云和里程计消息
 
 } // PointOdometry::Process
 
