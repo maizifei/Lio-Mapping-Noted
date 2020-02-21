@@ -56,7 +56,7 @@ plane_projection_factor: 0
 imu_factor: 1
 point_distance_factor: 1
 
-prior_factor: 0
+prior_factor: 0  #estimator的联合优化中是否加入外参项
 
 marginalization_factor: 1
 
@@ -64,7 +64,7 @@ odom_io: 2
 
 pcl_viewer: 0
 
-# IMU noises
+# IMU noises  用于IMU预积分的Covariance递推
 acc_n: 0.2
 gyr_n: 0.02
 acc_w: 0.0002
