@@ -220,7 +220,7 @@ class Estimator : public MeasurementManager, public PointMapping {
   CircularBuffer<shared_ptr<IntegrationBase> > pre_integrations_{estimator_config_.window_size + 1};
   CircularBuffer<PointCloudPtr> surf_stack_{estimator_config_.window_size + 1};  //去畸变后的原始平面点云buffer
   CircularBuffer<PointCloudPtr> corner_stack_{estimator_config_.window_size + 1};  //去畸变后的原始平面点云buffer
-  CircularBuffer<PointCloudPtr> full_stack_{estimator_config_.window_size + 1};  //原始全部点云buffer
+  CircularBuffer<PointCloudPtr> full_stack_{estimator_config_.window_size + 1};  //原始全部点云buffer(未去畸变)
 
   ///> optimization buffers
   CircularBuffer<bool> opt_point_coeff_mask_{estimator_config_.opt_window_size + 1};

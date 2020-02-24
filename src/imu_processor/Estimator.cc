@@ -2401,16 +2401,17 @@ void Estimator::SolveOptimization() {
 
       Quaterniond rot_pivot(Rs_pivot * transform_lb.rot.inverse());
       Eigen::Vector3d pos_pivot = Ps_pivot - rot_pivot * transform_lb.pos;
+      // 发布原始平面点云(去畸变)
       PublishCloudMsg(pub_local_surf_points_,
                       *surf_stack_[pivot_idx + 1],
                       Headers_[pivot_idx + 1].stamp,
                       "/laser_local");
-
+      // 发布原始角点云(去畸变)
       PublishCloudMsg(pub_local_corner_points_,
                       *corner_stack_[pivot_idx + 1],
                       Headers_[pivot_idx + 1].stamp,
                       "/laser_local");
-
+      // 发布原始全分辨率点云(未去畸变)
       PublishCloudMsg(pub_local_full_points_,
                       *full_stack_[pivot_idx + 1],
                       Headers_[pivot_idx + 1].stamp,

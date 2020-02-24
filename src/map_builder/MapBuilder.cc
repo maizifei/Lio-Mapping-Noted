@@ -187,7 +187,7 @@ void MapBuilder::PublishMapBuilderResults() {
   }
 
   // publish transformed full resolution input cloud
-  // 发布地图坐标系下的全分辨率点云
+  // 发布地图坐标系下的全分辨率点云(未去畸变)
   PublishCloudMsg(pub_full_cloud_, *full_cloud_, time_laser_odometry_, "/world");
 
 
