@@ -151,11 +151,13 @@ void MapBuilder::PublishMapBuilderResults() {
   }
 
   // publish new map cloud according to the input output ratio
+  // 根据输入输出比例发布地图点云
   ++map_frame_count_;
-  if (map_frame_count_ >= num_map_frames_) {
+  if (map_frame_count_ >= num_map_frames_) {  //num_map_frames_默认为5
     map_frame_count_ = 0;
 
     // accumulate map cloud
+    // 累积特征点云为新的地图点云laser_cloud_surround_，即cube方阵中的点云
     laser_cloud_surround_->clear();
     size_t laser_cloud_surround_size = laser_cloud_surround_idx_.size();
     for (int i = 0; i < laser_cloud_surround_size; ++i) {
@@ -178,12 +180,14 @@ void MapBuilder::PublishMapBuilderResults() {
 
 
   // transform full resolution input cloud to map
+  // 将全分辨率点云转换到地图坐标系
   size_t laser_full_cloud_size = full_cloud_->points.size();
   for (int i = 0; i < laser_full_cloud_size; i++) {
     PointAssociateToMap(full_cloud_->points[i], full_cloud_->points[i], transform_tobe_mapped_);
   }
 
   // publish transformed full resolution input cloud
+  // 发布地图坐标系下的全分辨率点云
   PublishCloudMsg(pub_full_cloud_, *full_cloud_, time_laser_odometry_, "/world");
 
 

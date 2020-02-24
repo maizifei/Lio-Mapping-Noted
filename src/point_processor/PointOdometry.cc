@@ -318,7 +318,7 @@ void PointOdometry::Process() {
   size_t last_surf_size = last_surf_cloud_->points.size();
 
   tic_toc_.Tic();
-  // 打开纯激光里程计的计算时，才运行里程计计算
+  // 使能纯激光里程计的计算时，才运行里程计计算，在Estimator.cc中完成初始化后关闭
   if (enable_odom_) {
     // NOTE: fixed number here
     if (last_corner_size > 10 && last_surf_size > 100) {

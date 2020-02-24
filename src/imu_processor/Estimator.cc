@@ -494,7 +494,7 @@ void Estimator::ProcessLaserOdom(const Transform &transform_in, const std_msgs::
     size_corner_stack_.push(laser_cloud_corner_stack_downsampled_->size());
   }
 
-  full_stack_.push(boost::make_shared<PointCloud>(*full_cloud_));
+  full_stack_.push(boost::make_shared<PointCloud>(*full_cloud_));  //将新来的原始全部点云压入buffer
 
   opt_surf_stack_.push(surf_stack_.last());
   opt_corner_stack_.push(corner_stack_.last());
@@ -702,10 +702,10 @@ void Estimator::ProcessLaserOdom(const Transform &transform_in, const std_msgs::
             down_size_filter_corner_.filter(*laser_cloud_corner_stack_downsampled_);
             size_t laser_cloud_corner_stack_ds_size = laser_cloud_corner_stack_downsampled_->points.size();
 
-            surf_stack_.push(boost::make_shared<PointCloud>(*laser_cloud_surf_stack_downsampled_));
+            surf_stack_.push(boost::make_shared<PointCloud>(*laser_cloud_surf_stack_downsampled_));  //去畸变后的原始平面点云
             size_surf_stack_.push(laser_cloud_surf_stack_downsampled_->size());
 
-            corner_stack_.push(boost::make_shared<PointCloud>(*laser_cloud_corner_stack_downsampled_));
+            corner_stack_.push(boost::make_shared<PointCloud>(*laser_cloud_corner_stack_downsampled_));  //去畸变后的原始角点云
             size_corner_stack_.push(laser_cloud_corner_stack_downsampled_->size());
 
             ROS_DEBUG_STREAM("deskew time: " << t_deskew.Toc());
