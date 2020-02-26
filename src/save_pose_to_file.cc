@@ -7,8 +7,10 @@
 
 using namespace std;
 
-static int frame_count = 0;
-ofstream destFile;  //("/home/belight/Dataset/test20191231/predict_odom_test3.txt", ios::out);
+static int frame_count1 = 0;
+static int frame_count2 = 0;
+ofstream destFile1;  //("/home/belight/Dataset/test20191231/predict_odom_test3.txt", ios::out);
+ofstream destFile2;
 
 // Z-Y-X Euler Angles
 Eigen::Vector3d Quat2Euler(Eigen::Quaterniond q){
@@ -39,52 +41,80 @@ Eigen::Vector3d Quat2Euler(Eigen::Quaterniond q){
   return euler;
 }
 
-void OdomHandler(const nav_msgs::Odometry::ConstPtr &odom_msg) {
+void LocalOdomHandler(const nav_msgs::Odometry::ConstPtr &local_odom_msg) {
 
   Eigen::Quaterniond q_odom_curr;
   Eigen::Vector3d t_odom_curr;
-  q_odom_curr.x() = odom_msg->pose.pose.orientation.x;
-  q_odom_curr.y() = odom_msg->pose.pose.orientation.y;
-  q_odom_curr.z() = odom_msg->pose.pose.orientation.z;
-  q_odom_curr.w() = odom_msg->pose.pose.orientation.w;
-  t_odom_curr.x() = odom_msg->pose.pose.position.x;
-  t_odom_curr.y() = odom_msg->pose.pose.position.y;
-  t_odom_curr.z() = odom_msg->pose.pose.position.z;
-  double odom_time = odom_msg->header.stamp.toSec();
+  q_odom_curr.x() = local_odom_msg->pose.pose.orientation.x;
+  q_odom_curr.y() = local_odom_msg->pose.pose.orientation.y;
+  q_odom_curr.z() = local_odom_msg->pose.pose.orientation.z;
+  q_odom_curr.w() = local_odom_msg->pose.pose.orientation.w;
+  t_odom_curr.x() = local_odom_msg->pose.pose.position.x;
+  t_odom_curr.y() = local_odom_msg->pose.pose.position.y;
+  t_odom_curr.z() = local_odom_msg->pose.pose.position.z;
+  double odom_time = local_odom_msg->header.stamp.toSec();
 //   cout << setprecision(10) << odom_time << endl;
 
   // Eigen::Vector3d euler_odom = q_odom_curr.matrix().eulerAngles(2,1,0)*57.3;
   Eigen::Vector3d euler_odom = Quat2Euler(q_odom_curr)*180/M_PI;
 //   cout << "predict position: " << t_odom_curr.transpose() << endl;
 
-//   destFile.fill('0');
-  destFile <<setw(10)<< frame_count <<setw(15)<< odom_time <<setw(15)<< t_odom_curr.x() <<setw(15)<< t_odom_curr.y() <<setw(15)<< t_odom_curr.z() <<setw(15)\
+//   destFile1.fill('0');
+  destFile1 <<setw(10)<< frame_count1 <<setw(15)<< odom_time <<setw(15)<< t_odom_curr.x() <<setw(15)<< t_odom_curr.y() <<setw(15)<< t_odom_curr.z() <<setw(15)\
            << euler_odom.x() <<setw(15)<< euler_odom.y() <<setw(15)<< euler_odom.z() << endl;
 
 
-  frame_count++;
+  frame_count1++;
+}
+
+void MapOdomHandler(const nav_msgs::Odometry::ConstPtr &map_odom_msg) {
+
+  Eigen::Quaterniond q_map_curr;
+  Eigen::Vector3d t_map_curr;
+  q_map_curr.x() = map_odom_msg->pose.pose.orientation.x;
+  q_map_curr.y() = map_odom_msg->pose.pose.orientation.y;
+  q_map_curr.z() = map_odom_msg->pose.pose.orientation.z;
+  q_map_curr.w() = map_odom_msg->pose.pose.orientation.w;
+  t_map_curr.x() = map_odom_msg->pose.pose.position.x;
+  t_map_curr.y() = map_odom_msg->pose.pose.position.y;
+  t_map_curr.z() = map_odom_msg->pose.pose.position.z;
+  double map_time = map_odom_msg->header.stamp.toSec();
+
+  Eigen::Vector3d euler_map = Quat2Euler(q_map_curr)*180/M_PI;
+
+  destFile2 <<setw(10)<< frame_count2 <<setw(15)<< map_time <<setw(15)<< t_map_curr.x() <<setw(15)<< t_map_curr.y() <<setw(15)<< t_map_curr.z() <<setw(15)\
+           << euler_map.x() <<setw(15)<< euler_map.y() <<setw(15)<< euler_map.z() << endl;
+
+  frame_count2++;
 }
 
 int main(int argc, char** argv)
 {
-    destFile.setf(ios::left);  //设置对齐方式（左对齐）
-    // destFile.fill('0');
-    destFile.setf(ios::fixed, ios::floatfield);  //设定为fixed模式，以小数点表示浮点数
-    destFile.precision(4);  //设置小数点位数（精度）
+    destFile1.setf(ios::left);  //设置对齐方式（左对齐）
+    // destFile1.fill('0');
+    destFile1.setf(ios::fixed, ios::floatfield);  //设定为fixed模式，以小数点表示浮点数
+    destFile1.precision(4);  //设置小数点位数（精度）
 
+    destFile2.setf(ios::left);
+    destFile2.setf(ios::fixed, ios::floatfield); 
+    destFile2.precision(4);
 
-    ros::init(argc, argv, "save_predict_odom");
+    ros::init(argc, argv, "save_odom_map");
     ros::NodeHandle nh("~");
     
-    string output_file;
-    nh.getParam("output_file",output_file);
-    destFile.open(output_file,ios::out);
+    string output_file1,output_file2;
+    nh.getParam("output_local_odom",output_file1);
+    nh.getParam("output_map_to_init",output_file2);
+    destFile1.open(output_file1,ios::out);
+    destFile2.open(output_file2,ios::out);
 
-    ros::Subscriber sub_predict_odom_ = nh.subscribe<nav_msgs::Odometry>("/predict_odom", 100, OdomHandler); 
+    ros::Subscriber sub_predict_odom_ = nh.subscribe<nav_msgs::Odometry>("/local_laser_odom", 100, LocalOdomHandler); 
+    ros::Subscriber sub_map_to_init_ = nh.subscribe<nav_msgs::Odometry>("/lio_map_builder/aft_mapped_to_init", 100, MapOdomHandler);
 
     ros::spin();
 
-    destFile.close();
+    destFile1.close();
+    destFile2.close();
 
     return 0;
 }
