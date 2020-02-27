@@ -340,6 +340,11 @@ target_link_libraries(${PROJECT_NAME}_save_pose_to_file
   ${point_processor_EXT_LIBS}
 )
 
+add_executable(${PROJECT_NAME}_save_local_mapped_pose src/save_local_mapped_pose.cc)
+target_link_libraries(${PROJECT_NAME}_save_local_mapped_pose
+  ${point_processor_EXT_LIBS}
+)
+
 #############
 ## Install ##
 #############
