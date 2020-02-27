@@ -10,9 +10,13 @@
     <param name="config_file" type="string" value="$(find lio)/config/my_test_16_indoor.yaml" />
   </node>
 
-  <node pkg="lio" type="lio_save_pose_to_file" name="lio_save_pose" output="screen">
+  <!-- <node pkg="lio" type="lio_save_pose_to_file" name="lio_save_odom_pose" output="screen">
     <param name="output_local_odom" type="string" value="/home/belight/Dataset/LIO/test20200114/local_odom_test1.txt" />
     <param name="output_map_to_init" type="string" value="/home/belight/Dataset/LIO/test20200114/map_to_init_test1.txt" />
+  </node> -->
+
+  <node pkg="lio" type="lio_save_local_mapped_pose" name="lio_save_pose" output="screen">
+    <param name="output_local_mapped_odom" type="string" value="/home/belight/Dataset/LIO/test20200114/test1/local_mapped_odom7.txt" />
   </node>
 
   <arg name="rviz" default="true" />
