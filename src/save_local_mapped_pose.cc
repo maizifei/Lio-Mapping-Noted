@@ -9,11 +9,19 @@ using namespace std;
 
 static int frame_count1 = 0;
 static int frame_count2 = 0;
-ofstream destFile1;  //("/home/belight/Dataset/test20191231/predict_odom_test3.txt", ios::out);
-ofstream destFile2;
+// ofstream destFile1;  //("/home/belight/Dataset/test20191231/predict_odom_test3.txt", ios::out);
+// ofstream destFile2;
+ofstream destFile;
 
 ros::Time time_local_odometry_;
 ros::Time time_mapped_odometry_;
+bool new_local_odometry_; 
+bool new_mapped_odometry_; 
+
+Eigen::Vector3d t_odom_curr;
+Eigen::Vector3d t_map_curr;
+Eigen::Vector3d euler_odom;
+Eigen::Vector3d euler_map;
 
 // Z-Y-X Euler Angles
 Eigen::Vector3d Quat2Euler(Eigen::Quaterniond q){
@@ -46,8 +54,10 @@ Eigen::Vector3d Quat2Euler(Eigen::Quaterniond q){
 
 void LocalOdomHandler(const nav_msgs::Odometry::ConstPtr &local_odom_msg) {
 
+  time_local_odometry_ = local_odom_msg->header.stamp;
+
   Eigen::Quaterniond q_odom_curr;
-  Eigen::Vector3d t_odom_curr;
+//   Eigen::Vector3d t_odom_curr;
   q_odom_curr.x() = local_odom_msg->pose.pose.orientation.x;
   q_odom_curr.y() = local_odom_msg->pose.pose.orientation.y;
   q_odom_curr.z() = local_odom_msg->pose.pose.orientation.z;
@@ -59,21 +69,24 @@ void LocalOdomHandler(const nav_msgs::Odometry::ConstPtr &local_odom_msg) {
 //   cout << setprecision(10) << odom_time << endl;
 
   // Eigen::Vector3d euler_odom = q_odom_curr.matrix().eulerAngles(2,1,0)*57.3;
-  Eigen::Vector3d euler_odom = Quat2Euler(q_odom_curr)*180/M_PI;
+  euler_odom = Quat2Euler(q_odom_curr)*180/M_PI;
 //   cout << "predict position: " << t_odom_curr.transpose() << endl;
 
 //   destFile1.fill('0');
-  destFile1 <<setw(10)<< frame_count1 <<setw(15)<< odom_time <<setw(15)<< t_odom_curr.x() <<setw(15)<< t_odom_curr.y() <<setw(15)<< t_odom_curr.z() <<setw(15)\
-           << euler_odom.x() <<setw(15)<< euler_odom.y() <<setw(15)<< euler_odom.z() << endl;
+//   destFile1 <<setw(10)<< frame_count1 <<setw(15)<< odom_time <<setw(15)<< t_odom_curr.x() <<setw(15)<< t_odom_curr.y() <<setw(15)<< t_odom_curr.z() <<setw(15)\
+//            << euler_odom.x() <<setw(15)<< euler_odom.y() <<setw(15)<< euler_odom.z() << endl;
 
 
   frame_count1++;
+  new_local_odometry_ = true;
 }
 
 void MapOdomHandler(const nav_msgs::Odometry::ConstPtr &mapped_odom_msg) {
 
+  time_mapped_odometry_ = mapped_odom_msg->header.stamp;
+  
   Eigen::Quaterniond q_map_curr;
-  Eigen::Vector3d t_map_curr;
+//   Eigen::Vector3d t_map_curr;
   q_map_curr.x() = mapped_odom_msg->pose.pose.orientation.x;
   q_map_curr.y() = mapped_odom_msg->pose.pose.orientation.y;
   q_map_curr.z() = mapped_odom_msg->pose.pose.orientation.z;
@@ -83,41 +96,74 @@ void MapOdomHandler(const nav_msgs::Odometry::ConstPtr &mapped_odom_msg) {
   t_map_curr.z() = mapped_odom_msg->pose.pose.position.z;
   double map_time = mapped_odom_msg->header.stamp.toSec();
 
-  Eigen::Vector3d euler_map = Quat2Euler(q_map_curr)*180/M_PI;
+  euler_map = Quat2Euler(q_map_curr)*180/M_PI;
 
-  destFile2 <<setw(10)<< frame_count2 <<setw(15)<< map_time <<setw(15)<< t_map_curr.x() <<setw(15)<< t_map_curr.y() <<setw(15)<< t_map_curr.z() <<setw(15)\
-           << euler_map.x() <<setw(15)<< euler_map.y() <<setw(15)<< euler_map.z() << endl;
+//   destFile2 <<setw(10)<< frame_count2 <<setw(15)<< map_time <<setw(15)<< t_map_curr.x() <<setw(15)<< t_map_curr.y() <<setw(15)<< t_map_curr.z() <<setw(15)\
+//            << euler_map.x() <<setw(15)<< euler_map.y() <<setw(15)<< euler_map.z() << endl;
 
   frame_count2++;
+  new_mapped_odometry_ = true;
+}
+
+bool HasNewData(){
+    return new_local_odometry_ && new_mapped_odometry_ && (frame_count1 == frame_count2);
+}
+
+void ProcessSaving(){
+
+    if(!HasNewData()){
+        return;
+    }
+    cout << ">>>>>>>>>>>>>>>>>>>>>>>>>Has New Data<<<<<<<<<<<<<<<<<<<<<<<<" <<endl;
+    new_local_odometry_ = false;
+    new_mapped_odometry_ = false;
+
+  destFile <<setw(10)<< frame_count1 <<setw(15)<< time_local_odometry_.toSec() <<setw(15)<< t_odom_curr.x() <<setw(15)<< t_odom_curr.y() <<setw(15)<< t_odom_curr.z() <<setw(15)\
+           << euler_odom.x() <<setw(15)<< euler_odom.y() <<setw(15)<< euler_odom.z() <<setw(15)<< t_map_curr.x() <<setw(15)<< t_map_curr.y() <<setw(15)<< t_map_curr.z() <<setw(15)\
+           << euler_map.x() <<setw(15)<< euler_map.y() <<setw(15)<< euler_map.z() << endl;
+
 }
 
 int main(int argc, char** argv)
 {
-    destFile1.setf(ios::left);  //设置对齐方式（左对齐）
-    // destFile1.fill('0');
-    destFile1.setf(ios::fixed, ios::floatfield);  //设定为fixed模式，以小数点表示浮点数
-    destFile1.precision(4);  //设置小数点位数（精度）
+    // destFile1.setf(ios::left);  //设置对齐方式（左对齐）
+    // // destFile1.fill('0');
+    // destFile1.setf(ios::fixed, ios::floatfield);  //设定为fixed模式，以小数点表示浮点数
+    // destFile1.precision(4);  //设置小数点位数（精度）
 
-    destFile2.setf(ios::left);
-    destFile2.setf(ios::fixed, ios::floatfield); 
-    destFile2.precision(4);
+    // destFile2.setf(ios::left);
+    // destFile2.setf(ios::fixed, ios::floatfield); 
+    // destFile2.precision(4);
 
-    ros::init(argc, argv, "save_odom_map");
+    destFile.setf(ios::left);
+    destFile.setf(ios::fixed, ios::floatfield); 
+    destFile.precision(4);
+
+    ros::init(argc, argv, "save_local_mapped_odom");
     ros::NodeHandle nh("~");
     
-    string output_file1,output_file2;
-    nh.getParam("output_local_odom",output_file1);
-    nh.getParam("output_map_to_init",output_file2);
-    destFile1.open(output_file1,ios::out);
-    destFile2.open(output_file2,ios::out);
+    string output_file;
+    // nh.getParam("output_local_odom",output_file1);
+    // nh.getParam("output_map_to_init",output_file2);
+    // destFile1.open(output_file1,ios::out);
+    // destFile2.open(output_file2,ios::out);
+    nh.getParam("output_local_mapped_odom",output_file);
+    destFile.open(output_file,ios::out);
 
     ros::Subscriber sub_predict_odom_ = nh.subscribe<nav_msgs::Odometry>("/local_laser_odom", 100, LocalOdomHandler); 
     ros::Subscriber sub_map_to_init_ = nh.subscribe<nav_msgs::Odometry>("/lio_map_builder/aft_mapped_to_init", 100, MapOdomHandler);
+    
+    ros::Rate r(100);
+    while(ros::ok()) {
+      ProcessSaving();
+      ros::spinOnce();
+      r.sleep();
+    }
+    // ros::spin();
 
-    ros::spin();
-
-    destFile1.close();
-    destFile2.close();
+    // destFile1.close();
+    // destFile2.close();
+    destFile.close();
 
     return 0;
 }
