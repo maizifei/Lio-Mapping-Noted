@@ -477,7 +477,7 @@ void Estimator::ProcessLaserOdom(const Transform &transform_in, const std_msgs::
 
   // TODO: check extrinsic parameter estimation
 
-  // NOTE: push PointMapping's point_coeff_map_
+  // NOTE: push PointMapping's point_coeff_map_  均为与初始化相关的变量
   ///> optimization buffers
   opt_point_coeff_mask_.push(false); // default new frame
   opt_point_coeff_map_.push(score_point_coeff_);
@@ -862,7 +862,8 @@ void Estimator::ProcessCompactData(const sensor_msgs::PointCloud2ConstPtr &compa
   DLOG(INFO) << "laser_cloud_corner_stack_downsampled_[" << header.stamp.toSec() << "]: "
             << laser_cloud_corner_stack_downsampled_->size();
 
-  Transform transform_to_init_ = transform_aft_mapped_;  //这里的transform_aft_mapped_是PointMapping::Process()得到的，只在初始化时起作用
+  //这里的transform_aft_mapped_是PointMapping::Process()得到的，只在初始化时起作用，初始化完成后就不再更新
+  Transform transform_to_init_ = transform_aft_mapped_;  
   ProcessLaserOdom(transform_to_init_, header);
 
 // NOTE: will be updated in PointMapping's OptimizeTransformTobeMapped
