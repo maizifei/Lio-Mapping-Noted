@@ -1573,7 +1573,8 @@ void Estimator::BuildLocalMap(vector<FeaturePerFrame> &feature_frames) {
   pcl::KdTreeFLANN<PointT>::Ptr kdtree_corner_from_map(new pcl::KdTreeFLANN<PointT>());
   kdtree_corner_from_map->setInputCloud(local_corner_points_filtered_ptr_);
 #endif
-
+  
+  //对opt_window_size窗口中pivot帧之后的每一帧点云进行scan to map相对局部地图的特征匹配，得到features
   for (int idx = 0; idx < estimator_config_.window_size + 1; ++idx) {
 
     FeaturePerFrame feature_per_frame;
