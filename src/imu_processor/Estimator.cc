@@ -1464,7 +1464,7 @@ void Estimator::BuildLocalMap(vector<FeaturePerFrame> &feature_frames) {
 
       init_local_map_ = true;
     }
-    // 计算窗口中第i帧到局部地图pivot帧的变换，并将每帧特征点云都转换到pivot帧雷达坐标系中
+    // 计算滑窗中每一帧到局部地图pivot帧的变换，并将pivot帧之后的特征点云都转换到pivot帧雷达坐标系中，建立局部地图
     for (int i = 0; i < estimator_config_.window_size + 1; ++i) {
 
       Eigen::Vector3d Ps_i = Ps_[i];
@@ -1476,11 +1476,11 @@ void Estimator::BuildLocalMap(vector<FeaturePerFrame> &feature_frames) {
       Twist<double> transform_li = Twist<double>(rot_li, pos_li);
       Eigen::Affine3f transform_pivot_i = (transform_pivot.inverse() * transform_li).cast<float>().transform();
 
-      Transform local_transform = transform_pivot_i;  // 窗口中第i帧到局部地图pivot帧的变换 i ----> pivot
-      local_transforms.push_back(local_transform);  //窗口中每一帧点云到局部地图的变换都是由IMU的数据得到的
+      Transform local_transform = transform_pivot_i;  // 滑窗中第i帧到局部地图pivot帧的变换 i ----> pivot，滑窗中每一帧点云到局部地图的变换都是由IMU的数据得到的
+      local_transforms.push_back(local_transform);  //滑窗中pivot帧之前的变换只用于后面的Visualization部分
 
-      if (i < pivot_idx) {  // pivot帧之前的特征点云不进行坐标变换
-        continue;  //为什么这里跳过？这样就意味着后面的局部地图local_surf_points_ptr_只包含pivot及之后的帧，这与论文不符！！！
+      if (i < pivot_idx) {  // pivot帧之前的特征点云不进行坐标变换，这样就意味着后面的局部地图local_surf_points_ptr_只包含pivot及之后的帧
+        continue;
       }
 
       PointCloud transformed_cloud_surf, transformed_cloud_corner;
@@ -1583,7 +1583,7 @@ void Estimator::BuildLocalMap(vector<FeaturePerFrame> &feature_frames) {
 
     TicToc t_features;
 
-    if (idx > pivot_idx) {  // 只对pivot之后的帧进行里程计计算
+    if (idx > pivot_idx) {  // 只对pivot之后的帧(即优化窗口内的所有帧)进行scan to map匹配，计算features
       if (idx != estimator_config_.window_size || !estimator_config_.imu_factor) {
 #ifdef USE_CORNER
         CalculateFeatures(kdtree_surf_from_map, local_surf_points_filtered_ptr_, surf_stack_[idx],
@@ -1593,7 +1593,7 @@ void Estimator::BuildLocalMap(vector<FeaturePerFrame> &feature_frames) {
         CalculateFeatures(kdtree_surf_from_map, local_surf_points_filtered_ptr_, surf_stack_[idx],
                           local_transforms[idx], features);
 #endif
-      } else {
+      } else {  // 对于最新帧，需要先进行雷达里程计位姿估计，然后计算features
         DLOG(INFO) << "local_transforms[idx] bef" << local_transforms[idx];
 
 #ifdef USE_CORNER
@@ -2523,6 +2523,9 @@ void Estimator::VectorToDouble() {
   }
 }
 
+// 根据优化估计的结果，对滑窗(window_size)内的所有帧位姿状态量进行更新
+// 对滑窗内第1～pivot-1帧，根据para_pose_[0]，即pivot帧的优化位姿，进行一次修正(只对Ps_，Rs_进行修正)
+// 对优化窗口内(即pivot～window_size)所有帧，同时对所有状态量进行更新
 void Estimator::DoubleToVector() {
 
 // FIXME: do we need to optimize the first state?
