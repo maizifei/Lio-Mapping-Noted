@@ -2525,7 +2525,7 @@ void Estimator::VectorToDouble() {
 }
 
 // 根据优化估计的结果，对滑窗(window_size)内的所有帧位姿状态量进行更新
-// 对滑窗内第1～pivot-1帧，根据para_pose_[0]，即pivot帧的优化位姿，进行一次修正(只对Ps_，Rs_进行修正)
+// 对滑窗内第1～pivot-1帧，根据pivot帧优化前后的航向角姿态偏差，进行一次修正(只对Ps_，Rs_进行修正)
 // 对优化窗口内(即pivot～window_size)所有帧，同时对所有状态量进行更新
 void Estimator::DoubleToVector() {
 
@@ -2556,7 +2556,7 @@ void Estimator::DoubleToVector() {
   }
 
 //  DLOG(INFO) << "origin_P0" << origin_P0.transpose();
-  // 根据pivot帧优化前后的姿态偏差，修正滑窗内pivot帧之前所有帧的位姿
+  // 根据pivot帧优化前后的航向角姿态偏差，修正滑窗内pivot帧之前所有帧的位姿
   {
     Eigen::Vector3d Ps_pivot = Ps_[pivot_idx];
     Eigen::Matrix3d Rs_pivot = Rs_[pivot_idx];
@@ -2583,7 +2583,7 @@ void Estimator::DoubleToVector() {
 
   }
 
-  // 根据pivot帧优化前后的姿态偏差，更新优化窗口内的位姿和IMU误差参数及外参
+  // 根据pivot帧优化前后的航向角姿态偏差，修正并更新优化窗口内的位姿和IMU误差参数及外参
   int i, opt_i;
   for (i = 0, opt_i = pivot_idx; i < estimator_config_.opt_window_size + 1; ++i, ++opt_i) {  
 //    DLOG(INFO) << "para aft: " << Vector3d(para_pose_[i][0], para_pose_[i][1], para_pose_[i][2]).transpose();
