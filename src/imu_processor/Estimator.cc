@@ -1770,6 +1770,7 @@ void Estimator::SolveOptimization() {
   vector<double *> para_ids;
 
   //region Add pose and speed bias parameters
+  // 添加系统整体的待优化参数
   for (int i = 0; i < estimator_config_.opt_window_size + 1;
        ++i) {
     ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
@@ -2532,16 +2533,17 @@ void Estimator::DoubleToVector() {
 // WARNING: not just yaw angle rot_diff; if it is compared with global features, there should be no need for rot_diff
 
 //  Quaterniond origin_R0{Rs_[0]};
+  // 计算pivot帧优化前后的姿态差，只考虑航向角
   int pivot_idx = int(estimator_config_.window_size - estimator_config_.opt_window_size);
   Vector3d origin_P0 = Ps_[pivot_idx];
-  Vector3d origin_R0 = R2ypr(Rs_[pivot_idx]);
+  Vector3d origin_R0 = R2ypr(Rs_[pivot_idx]);  // 联合优化前的pivot帧姿态欧拉角
 
-  Vector3d origin_R00 = R2ypr(Quaterniond(para_pose_[0][6],
+  Vector3d origin_R00 = R2ypr(Quaterniond(para_pose_[0][6],  // 联合优化后的pivot帧姿态欧拉角
                                           para_pose_[0][3],
                                           para_pose_[0][4],
                                           para_pose_[0][5]).normalized().toRotationMatrix());
   // Z-axix R00 to R0, regard para_pose's R as rotate along the Z-axis first
-  double y_diff = origin_R0.x() - origin_R00.x();
+  double y_diff = origin_R0.x() - origin_R00.x();  // 优化前后的航向角偏差
 
   //TODO
   Matrix3d rot_diff = ypr2R(Vector3d(y_diff, 0, 0));
@@ -2554,7 +2556,7 @@ void Estimator::DoubleToVector() {
   }
 
 //  DLOG(INFO) << "origin_P0" << origin_P0.transpose();
-
+  // 根据pivot帧优化前后的姿态偏差，修正滑窗内pivot帧之前所有帧的位姿
   {
     Eigen::Vector3d Ps_pivot = Ps_[pivot_idx];
     Eigen::Matrix3d Rs_pivot = Rs_[pivot_idx];
@@ -2581,8 +2583,9 @@ void Estimator::DoubleToVector() {
 
   }
 
+  // 根据pivot帧优化前后的姿态偏差，更新优化窗口内的位姿和IMU误差参数及外参
   int i, opt_i;
-  for (i = 0, opt_i = pivot_idx; i < estimator_config_.opt_window_size + 1; ++i, ++opt_i) {  //更新优化窗口内的位姿和IMU误差参数及外参
+  for (i = 0, opt_i = pivot_idx; i < estimator_config_.opt_window_size + 1; ++i, ++opt_i) {  
 //    DLOG(INFO) << "para aft: " << Vector3d(para_pose_[i][0], para_pose_[i][1], para_pose_[i][2]).transpose();
 
     Rs_[opt_i] = rot_diff * Quaterniond(para_pose_[i][6],
