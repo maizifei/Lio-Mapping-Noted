@@ -2724,7 +2724,7 @@ void Estimator::ProcessEstimation() {
     PairMeasurements measurements;
     std::unique_lock<std::mutex> buf_lk(buf_mutex_);
     con_.wait(buf_lk, [&] {
-      return (measurements = GetMeasurements()).size() != 0;
+      return (measurements = GetMeasurements()).size() != 0;  // 从compact_data_buf_和imu_buf_中获取缓存的雷达特征点云和imu数据
     });
     buf_lk.unlock();
 
@@ -2732,7 +2732,7 @@ void Estimator::ProcessEstimation() {
 //              << measurements.front().first.size();
 
     thread_mutex_.lock();
-    for (auto &measurement : measurements) {
+    for (auto &measurement : measurements) {  // 遍历当前获得的所有帧雷达特征点云和对应的imu数据measurements
       ROS_DEBUG_STREAM("measurements ratio: 1:" << measurement.first.size());
       CompactDataConstPtr compact_data_msg = measurement.second;
       double ax = 0, ay = 0, az = 0, rx = 0, ry = 0, rz = 0;
