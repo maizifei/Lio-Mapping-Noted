@@ -914,7 +914,7 @@ bool Estimator::RunInitialization() {
     }
   }
 
-  //1.陀螺仪Bias校正，2.重力矢量修正，3.初始化速度
+  //1.陀螺仪Bias校正，2.重力矢量修正，3.初始化速度，4.得到重力g的方向后，需更新所有激光帧在世界坐标系下的Ps_、Rs_、Vs_
   Eigen::Vector3d g_vec_in_laser;
   bool init_result
       = ImuInitializer::Initialization(all_laser_transforms_, Vs_, Bas_, Bgs_, g_vec_in_laser, transform_lb_, R_WI_);
@@ -939,7 +939,7 @@ bool Estimator::RunInitialization() {
 #endif
     //endregion
   }
-
+  //通过将重力旋转到z轴上，得到世界坐标系与雷达坐标系l0之间的旋转矩阵rot_diff
   Matrix3d R0 = R_WI_.transpose();
 
   double yaw = R2ypr(R0 * Rs_[0]).x();
@@ -953,7 +953,7 @@ bool Estimator::RunInitialization() {
   for (int i = 0; i <= cir_buf_count_; i++) {
     pre_integrations_[i]->Repropagate(Bas_[i], Bgs_[i]);  //对IMU预积分值进行重新计算
   }
-
+  //初始化窗口内所有变量从参考坐标系l0旋转到世界坐标系w
   Matrix3d rot_diff = R0;
   for (int i = 0; i <= cir_buf_count_; i++) {
     Ps_[i] = (rot_diff * Ps_[i]).eval();
