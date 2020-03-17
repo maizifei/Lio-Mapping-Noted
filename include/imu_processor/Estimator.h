@@ -187,7 +187,7 @@ class Estimator : public MeasurementManager, public PointMapping {
   size_t laser_odom_recv_count_ = 0;
 
   Vector3d acc_last_, gyr_last_;
-  Vector3d g_vec_;
+  Vector3d g_vec_{0,0,-9.805}  //bug fix 这里不对g_vec_进行初始化，会导致在算法初始化g_vec_未完成时，g_vec_为没有赋值的随机值，从而导致IMU位置积分过程中出现错误
 
   shared_ptr<IntegrationBase> tmp_pre_integration_;
 
